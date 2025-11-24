@@ -82,6 +82,7 @@ function createWindow() {
       height: 900,
       minWidth: 1000,
       minHeight: 600,
+      autoHideMenuBar: true,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -94,6 +95,9 @@ function createWindow() {
     
     console.log('✅ BrowserWindow 对象创建成功');
     console.log('📊 窗口 ID:', mainWindow.id);
+    
+    // 隐藏顶部菜单栏
+    mainWindow.setMenuBarVisibility(false);
     
     // 禁用缩放功能
     mainWindow.webContents.setZoomFactor(1.0);
@@ -136,8 +140,8 @@ function createWindow() {
     mainWindow.focus();
     // 确保缩放为 1.0
     mainWindow.webContents.setZoomFactor(1.0);
-    // 生产环境也打开开发者工具以便调试
-    if (!isDev) {
+    // 仅在开发环境打开调试工具
+    if (isDev) {
       mainWindow.webContents.openDevTools();
     }
   });
