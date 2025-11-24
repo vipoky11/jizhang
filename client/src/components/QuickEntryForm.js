@@ -341,13 +341,13 @@ const QuickEntryForm = ({ onSubmit, loading = false, transactionType = 'expense'
       title: '描述',
       dataIndex: 'description',
       key: 'description',
+      width: 260,
       render: (text, record) => (
         <Input.TextArea
           value={text}
           onChange={(e) => handleBatchDataChange(record.key, 'description', e.target.value)}
-          placeholder="请输入描述（支持回车换行）"
-          rows={2}
-          autoSize={{ minRows: 2, maxRows: 4 }}
+          placeholder="描述（可选）"
+          autoSize={{ minRows: 1, maxRows: 4 }}
           style={{ resize: 'vertical' }}
         />
       ),
@@ -523,7 +523,7 @@ const QuickEntryForm = ({ onSubmit, loading = false, transactionType = 'expense'
             dataSource={batchData}
             pagination={false}
             size="small"
-            scroll={{ y: 300, x: 1000 }}
+            scroll={{ y: 300, x: 1200 }}
             rowClassName={(record) => {
               return highlightRows.has(record.key) ? 'ant-table-row-highlight' : '';
             }}

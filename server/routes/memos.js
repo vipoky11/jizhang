@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database').promise;
+const { db: sqliteDb } = require('../config/database-sqlite');
 
 // 获取所有备忘录
 router.get('/', async (req, res) => {
@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
       query += ` ORDER BY ${sortField} ${sortDir}`;
     }
 
-    const [rows] = await db.query(query, params);
+    const rows = sqliteDb.prepare(query).all(params);
     res.json({ success: true, data: rows });
   } catch (error) {
     console.error('获取备忘录失败:', error);
@@ -63,13 +63,13 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await db.query('SELECT * FROM memos WHERE id = ?', [id]);
+    const row = sqliteDb.prepare('SELECT * FROM memos WHERE id = ?').get(id);
     
-    if (rows.length === 0) {
+    if (!row) {
       return res.status(404).json({ success: false, message: '备忘录不存在' });
     }
     
-    res.json({ success: true, data: rows[0] });
+    res.json({ success: true, data: row });
   } catch (error) {
     console.error('获取备忘录失败:', error);
     res.status(500).json({ success: false, message: '获取备忘录失败' });
@@ -119,15 +119,12 @@ router.post('/', async (req, res) => {
       }
     }
 
-    const [result] = await db.query(
-      'INSERT INTO memos (title, content, tags, color, priority, memo_date) VALUES (?, ?, ?, ?, ?, ?)',
-      [title.trim(), content.trim(), tagsStr, null, priority || 0, dateValue]
-    );
-
+    const stmt = sqliteDb.prepare('INSERT INTO memos (title, content, tags, color, priority, memo_date) VALUES (?, ?, ?, ?, ?, ?)');
+    const result = stmt.run(title.trim(), content.trim(), tagsStr, null, priority || 0, dateValue);
     res.json({ 
       success: true, 
       message: '创建成功',
-      data: { id: result.insertId }
+      data: { id: result.lastInsertRowid }
     });
   } catch (error) {
     console.error('创建备忘录失败:', error);
@@ -185,12 +182,11 @@ router.put('/:id', async (req, res) => {
       }
     }
 
-    const [result] = await db.query(
-      'UPDATE memos SET title = ?, content = ?, tags = ?, color = ?, priority = ?, memo_date = ? WHERE id = ?',
-      [title.trim(), content.trim(), tagsStr, null, priority || 0, dateValue, id]
-    );
+    const result = sqliteDb.prepare(
+      'UPDATE memos SET title = ?, content = ?, tags = ?, color = ?, priority = ?, memo_date = ? WHERE id = ?'
+    ).run(title.trim(), content.trim(), tagsStr, null, priority || 0, dateValue, id);
 
-    if (result.affectedRows === 0) {
+    if (result.changes === 0) {
       return res.status(404).json({ success: false, message: '备忘录不存在' });
     }
 
@@ -205,9 +201,9 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await db.query('DELETE FROM memos WHERE id = ?', [id]);
+    const result = sqliteDb.prepare('DELETE FROM memos WHERE id = ?').run(id);
 
-    if (result.affectedRows === 0) {
+    if (result.changes === 0) {
       return res.status(404).json({ success: false, message: '备忘录不存在' });
     }
 
@@ -229,12 +225,13 @@ router.post('/batch-delete', async (req, res) => {
 
     // 构建批量删除查询
     const placeholders = ids.map(() => '?').join(',');
-    const [result] = await db.query(`DELETE FROM memos WHERE id IN (${placeholders})`, ids);
+    const stmt = sqliteDb.prepare(`DELETE FROM memos WHERE id IN (${placeholders})`);
+    const result = stmt.run(...ids);
 
     res.json({ 
       success: true, 
-      message: `成功删除 ${result.affectedRows} 条备忘录`,
-      deletedCount: result.affectedRows
+      message: `成功删除 ${result.changes} 条备忘录`,
+      deletedCount: result.changes
     });
   } catch (error) {
     console.error('批量删除备忘录失败:', error);
@@ -245,9 +242,9 @@ router.post('/batch-delete', async (req, res) => {
 // 获取统计信息
 router.get('/stats/summary', async (req, res) => {
   try {
-    const [totalResult] = await db.query('SELECT COUNT(*) as total FROM memos');
-    const [correctResult] = await db.query('SELECT COUNT(*) as count FROM memos WHERE priority = 0');
-    const [wrongResult] = await db.query('SELECT COUNT(*) as count FROM memos WHERE priority = 1');
+    const totalResult = sqliteDb.prepare('SELECT COUNT(*) as total FROM memos').get();
+    const correctResult = sqliteDb.prepare('SELECT COUNT(*) as count FROM memos WHERE priority = 0').get();
+    const wrongResult = sqliteDb.prepare('SELECT COUNT(*) as count FROM memos WHERE priority = 1').get();
     
     const stats = {
       total: totalResult[0]?.total || 0,
