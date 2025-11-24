@@ -96,9 +96,6 @@ const Login = ({ onLoginSuccess }) => {
             </Button>
           </Form.Item>
         </Form>
-        <div style={{ textAlign: 'center', color: '#999', fontSize: '12px', marginTop: '16px' }}>
-          登录后7天内无需重复登录
-        </div>
       </Card>
     </div>
   );

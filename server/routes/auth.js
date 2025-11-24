@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
 
 // 默认密码（可以从环境变量读取，或存储在数据库中）
@@ -10,8 +12,46 @@ function generateToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
-// 简单的内存存储（生产环境建议使用 Redis 或数据库）
-const activeTokens = new Map();
+// token 持久化存储
+const userDataDir = process.env.ELECTRON_USER_DATA || path.join(__dirname, '../../data');
+const tokenStorePath = path.join(userDataDir, 'auth_tokens.json');
+
+function ensureUserDataDir() {
+  if (!fs.existsSync(userDataDir)) {
+    fs.mkdirSync(userDataDir, { recursive: true });
+  }
+}
+
+function loadTokensFromFile() {
+  try {
+    ensureUserDataDir();
+    if (!fs.existsSync(tokenStorePath)) {
+      return new Map();
+    }
+    const raw = fs.readFileSync(tokenStorePath, 'utf-8');
+    if (!raw) {
+      return new Map();
+    }
+    const parsed = JSON.parse(raw);
+    return new Map(Object.entries(parsed));
+  } catch (error) {
+    console.warn('⚠️  无法读取 token 存储文件，使用空 Map:', error.message);
+    return new Map();
+  }
+}
+
+function saveTokensToFile(tokens) {
+  try {
+    ensureUserDataDir();
+    const obj = Object.fromEntries(tokens);
+    fs.writeFileSync(tokenStorePath, JSON.stringify(obj));
+  } catch (error) {
+    console.error('❌ 写入 token 存储文件失败:', error);
+  }
+}
+
+// 简单的内存存储（带持久化）
+const activeTokens = loadTokensFromFile();
 
 // 登录接口
 router.post('/login', (req, res) => {
@@ -36,6 +76,7 @@ router.post('/login', (req, res) => {
         expiresAt,
         createdAt: Date.now()
       });
+      saveTokensToFile(activeTokens);
 
       // 清理过期 token（可选，定期清理）
       cleanupExpiredTokens();
@@ -85,6 +126,7 @@ router.post('/verify', (req, res) => {
     // 检查是否过期
     if (Date.now() > tokenData.expiresAt) {
       activeTokens.delete(token);
+      saveTokensToFile(activeTokens);
       return res.status(401).json({
         success: false,
         message: 'Token 已过期'
@@ -112,6 +154,7 @@ router.post('/logout', (req, res) => {
 
     if (token) {
       activeTokens.delete(token);
+      saveTokensToFile(activeTokens);
     }
 
     return res.json({
@@ -135,6 +178,7 @@ function cleanupExpiredTokens() {
       activeTokens.delete(token);
     }
   }
+  saveTokensToFile(activeTokens);
 }
 
 // 定期清理过期 token（每小时清理一次）
