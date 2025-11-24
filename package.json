@@ -12,7 +12,7 @@
     "install-all": "npm install && cd client && npm install",
     "electron": "electron .",
     "electron:dev": "bash scripts/kill-ports.sh && NODE_ENV=development concurrently \"npm run server\" \"npm run client\" \"wait-on http://localhost:3000 http://localhost:5001/api/health && electron .\"",
-    "electron:build": "cd client && npm run build && cd .. && electron-builder",
+    "electron:build": "cd client && npm run build && cd .. && electron-builder --publish=never",
     "electron:build:win": "cd client && npm run build && cd .. && electron-builder --win --x64 --publish=never",
     "electron:build:mac": "cd client && npm run build && cd .. && electron-builder --mac",
     "electron:build:linux": "cd client && npm run build && cd .. && electron-builder --linux",
