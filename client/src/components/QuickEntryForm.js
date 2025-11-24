@@ -541,138 +541,165 @@ const QuickEntryForm = ({ onSubmit, loading = false, transactionType = 'expense'
           `}</style>
         </div>
       ) : (
-      <Form
-        form={form}
-        layout="inline"
-        onFinish={handleSubmit}
-        initialValues={{
-          type: 'income',
-          date: dayjs(),
-          amount: undefined,
-          description: '',
-          category: undefined,
-          account: defaultAccount || undefined,
-        }}
-        style={{ width: '100%', display: 'flex', flexWrap: 'wrap', gap: '8px' }}
-      >
-        <Form.Item
-          name="type"
-          rules={[{ required: true, message: '请选择类型' }]}
-          style={{ marginBottom: 0 }}
-        >
-          <Select style={{ width: 90 }} placeholder="请选择类型" onChange={handleTypeChange}>
-            <Option value="income">收入</Option>
-            <Option value="expense">支出</Option>
-          </Select>
-        </Form.Item>
+        <div className="quick-entry-single">
+          <div className="quick-entry-single-header">
+            <span>类型</span>
+            <span>金额</span>
+            <span>描述</span>
+            <span>分类</span>
+            <span>账户</span>
+            <span>供应商</span>
+            <span>操作</span>
+          </div>
+          <Form
+            form={form}
+            layout="inline"
+            className="quick-entry-single-form"
+            onFinish={handleSubmit}
+            initialValues={{
+              type: 'income',
+              date: dayjs(),
+              amount: undefined,
+              description: '',
+              category: undefined,
+              account: defaultAccount || undefined,
+            }}
+          >
+            <Form.Item
+              name="type"
+              rules={[{ required: true, message: '请选择类型' }]}
+            >
+              <Select placeholder="请选择类型" onChange={handleTypeChange}>
+                <Option value="income">收入</Option>
+                <Option value="expense">支出</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item
-          name="amount"
-          rules={[{ required: true, message: '请输入金额' }]}
-          style={{ marginBottom: 0 }}
-        >
-          <InputNumber
-            min={0}
-            precision={2}
-            style={{ width: 140 }}
-            placeholder="请输入金额"
-            autoFocus
-          />
-        </Form.Item>
+            <Form.Item
+              name="amount"
+              rules={[{ required: true, message: '请输入金额' }]}
+            >
+              <InputNumber
+                min={0}
+                precision={2}
+                placeholder="请输入金额"
+                autoFocus
+              />
+            </Form.Item>
 
-        <Form.Item
-          name="description"
-          style={{ marginBottom: 0, flex: 1, minWidth: 180, maxWidth: 300 }}
-        >
-          <TextArea 
-            placeholder="描述（可选）" 
-            rows={1}
-            autoSize={{ minRows: 1, maxRows: 4 }}
-            style={{ width: '100%', resize: 'vertical' }}
-          />
-        </Form.Item>
+            <Form.Item
+              name="description"
+            >
+              <TextArea 
+                placeholder="描述（可选）" 
+                rows={1}
+                autoSize={{ minRows: 1, maxRows: 4 }}
+                style={{ width: '100%', resize: 'vertical' }}
+              />
+            </Form.Item>
 
-        <Form.Item
-          name="category"
-          rules={[{ required: true, message: '请选择分类' }]}
-          style={{ marginBottom: 0 }}
-        >
-          <Select 
-            style={{ width: 120 }}
-            placeholder="请选择分类"
-            showSearch
-            filterOption={(input, option) =>
-              (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+            <Form.Item
+              name="category"
+              rules={[{ required: true, message: '请选择分类' }]}
+            >
+              <Select 
+                placeholder="请选择分类"
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+              >
+                {categories.map(cat => (
+                  <Option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="account"
+              rules={[{ required: true, message: '请选择账户' }]}
+            >
+              <Select placeholder="请选择账户">
+                {accounts.map(acc => (
+                  <Option key={acc.id} value={acc.name}>
+                    {acc.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="supplier"
+              rules={[{ required: true, message: '请选择供应商' }]}
+            >
+              <Select 
+                placeholder="请选择供应商"
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+              >
+                {suppliers.map(supplier => (
+                  <Option key={supplier.id} value={supplier.name}>
+                    {supplier.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="date"
+              rules={[{ required: true, message: '请选择日期' }]}
+            >
+              <DatePicker 
+                format="YYYY-MM-DD"
+                locale={locale}
+                placeholder="请选择日期"
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Button 
+                type="primary" 
+                htmlType="submit"
+                icon={<PlusOutlined />}
+                loading={loading}
+              >
+                提交
+              </Button>
+            </Form.Item>
+          </Form>
+          <style>{`
+            .quick-entry-single-header,
+            .quick-entry-single-form {
+              display: grid;
+              grid-template-columns: 90px 140px minmax(200px, 1fr) 120px 110px 140px 90px;
+              gap: 8px;
+              align-items: center;
             }
-          >
-            {categories.map(cat => (
-              <Option key={cat.id} value={cat.name}>
-                {cat.name}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item
-          name="account"
-          rules={[{ required: true, message: '请选择账户' }]}
-          style={{ marginBottom: 0 }}
-        >
-          <Select style={{ width: 100 }} placeholder="请选择账户">
-            {accounts.map(acc => (
-              <Option key={acc.id} value={acc.name}>
-                {acc.name}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item
-          name="supplier"
-          rules={[{ required: true, message: '请选择供应商' }]}
-          style={{ marginBottom: 0 }}
-        >
-          <Select 
-            style={{ width: 140 }}
-            placeholder="请选择供应商"
-            showSearch
-            filterOption={(input, option) =>
-              (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+            .quick-entry-single-header {
+              font-weight: 600;
+              color: #666;
+              margin-bottom: 8px;
             }
-          >
-            {suppliers.map(supplier => (
-              <Option key={supplier.id} value={supplier.name}>
-                {supplier.name}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item
-          name="date"
-          rules={[{ required: true, message: '请选择日期' }]}
-          style={{ marginBottom: 0 }}
-        >
-          <DatePicker 
-            format="YYYY-MM-DD"
-            locale={locale}
-            style={{ width: 140 }}
-            placeholder="请选择日期"
-          />
-        </Form.Item>
-
-        <Form.Item style={{ marginBottom: 0 }}>
-          <Button 
-            type="primary" 
-            htmlType="submit"
-            icon={<PlusOutlined />}
-            loading={loading}
-            style={{ minWidth: 80 }}
-          >
-            提交
-          </Button>
-        </Form.Item>
-      </Form>
+            .quick-entry-single-form .ant-form-item {
+              margin-bottom: 0;
+            }
+            .quick-entry-single-form .ant-form-item-control-input {
+              width: 100%;
+            }
+            .quick-entry-single-form .ant-input-number,
+            .quick-entry-single-form .ant-picker,
+            .quick-entry-single-form .ant-select {
+              width: 100%;
+            }
+            .quick-entry-single-form button {
+              width: 100%;
+            }
+          `}</style>
+        </div>
       )}
     </Card>
   );
