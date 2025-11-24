@@ -1,0 +1,117 @@
+{
+  "name": "dish-accounting-system",
+  "version": "1.0.0",
+  "description": "记账系统",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "bash scripts/kill-ports.sh && concurrently \"npm run server\" \"npm run client\"",
+    "dev:client-db": "bash scripts/kill-ports.sh && USE_CLIENT_DB=true concurrently \"npm run server:client-db\" \"npm run client\"",
+    "server": "nodemon server/index.js",
+    "server:client-db": "USE_CLIENT_DB=true nodemon server/index.js",
+    "client": "cd client && npm start",
+    "install-all": "npm install && cd client && npm install",
+    "electron": "electron .",
+    "electron:dev": "bash scripts/kill-ports.sh && NODE_ENV=development concurrently \"npm run server\" \"npm run client\" \"wait-on http://localhost:3000 http://localhost:5001/api/health && electron .\"",
+    "electron:build": "cd client && npm run build && cd .. && electron-builder",
+    "electron:build:win": "cd client && npm run build && cd .. && electron-builder --win --x64",
+    "electron:build:mac": "cd client && npm run build && cd .. && electron-builder --mac",
+    "electron:build:linux": "cd client && npm run build && cd .. && electron-builder --linux",
+    "build": "cd client && npm run build",
+    "init-db": "node server/database/init.js",
+    "test-db": "node server/database/test-connection.js",
+    "create-user": "node server/database/create-user.js",
+    "kill-port": "bash scripts/kill-port.sh 5000",
+    "check-backend": "node scripts/check-backend.js",
+    "migrate-account": "node server/database/migrate-account.js",
+    "migrate-categories": "node server/database/migrate-categories.js",
+    "fix-categories": "node server/database/fix-categories-data.js",
+    "init-categories": "node server/database/init-categories-simple.js",
+    "clear-categories": "node server/database/clear-categories.js",
+    "migrate-accounts": "node server/database/migrate-accounts.js",
+    "set-default-account": "node server/database/set-default-account.js",
+    "migrate-memos": "node server/database/migrate-memos.js",
+    "migrate-tags": "node server/database/migrate-tags.js",
+    "migrate-colors": "node server/database/migrate-colors.js",
+    "migrate-memo-date": "node server/database/migrate-memo-date.js",
+    "migrate-remove-color": "node server/database/migrate-remove-color.js",
+    "migrate-suppliers": "node server/database/migrate-suppliers.js",
+    "migrate-supplier-field": "node server/database/migrate-supplier-field.js"
+  },
+  "keywords": [
+    "dish",
+    "accounting",
+    "management"
+  ],
+  "author": "记账系统",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "nodemon": "^3.0.2",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.accounting.app",
+    "productName": "记账系统",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "server/**/*",
+      "package.json",
+      "!client/src/**/*",
+      "!client/public/**/*",
+      "!client/node_modules/**/*",
+      "!client/package*.json",
+      "!client/README.md",
+      "!client/.gitignore",
+      "!client/.eslintrc*",
+      "!client/tsconfig.json",
+      "client/build/**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}",
+      "!client/src/**/*",
+      "!client/public/**/*",
+      "!client/node_modules/**/*",
+      "!client/package*.json",
+      "!client/README.md",
+      "!client/.gitignore",
+      "!client/.eslintrc*",
+      "!client/tsconfig.json"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "mac": {
+      "category": "public.app-category.finance",
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  }
+}

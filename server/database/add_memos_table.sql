@@ -1,0 +1,14 @@
+-- 创建备忘录表
+CREATE TABLE IF NOT EXISTS memos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL COMMENT '标题',
+  content TEXT NOT NULL COMMENT '内容',
+  tags VARCHAR(500) DEFAULT '' COMMENT '标签，多个标签用逗号分隔',
+  color VARCHAR(20) DEFAULT '#1890ff' COMMENT '颜色标记',
+  priority INT DEFAULT 0 COMMENT '状态：0-对，1-错',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  INDEX idx_created_at (created_at),
+  INDEX idx_priority (priority)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='备忘录表';
+
