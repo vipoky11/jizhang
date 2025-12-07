@@ -17,7 +17,7 @@ async function initSqliteDatabase() {
         SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'
       `).all();
       const existingTables = allTables.map(t => t.name);
-      const requiredTables = ['transactions', 'categories', 'accounts', 'suppliers', 'memos', 'tags'];
+      const requiredTables = ['transactions', 'categories', 'accounts', 'suppliers', 'tags'];
       const missingTables = requiredTables.filter(t => !existingTables.includes(t));
       
       if (missingTables.length === 0) {
@@ -36,7 +36,6 @@ async function initSqliteDatabase() {
       'add_categories_table.sql',
       'add_accounts_table.sql',
       'add_suppliers_table.sql',
-      'add_memos_table.sql',
       'add_tags_table.sql',
     ];
 
@@ -84,25 +83,13 @@ async function initSqliteDatabase() {
       }
     }
 
-    // 添加 memo_date 字段到 memos 表（如果不存在）
-    try {
-      db.exec(`
-        ALTER TABLE memos ADD COLUMN memo_date DATE DEFAULT NULL;
-      `);
-      console.log('✅ 已添加 memo_date 字段');
-    } catch (error) {
-      if (!error.message.includes('duplicate column')) {
-        console.log('ℹ️  memo_date 字段已存在或添加失败');
-      }
-    }
-
     // 验证表是否创建成功
     const allTables = db.prepare(`
       SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'
     `).all();
     
     // 检查关键表是否存在
-    const requiredTables = ['transactions', 'categories', 'accounts', 'suppliers', 'memos', 'tags'];
+    const requiredTables = ['transactions', 'categories', 'accounts', 'suppliers', 'tags'];
     const existingTables = allTables.map(t => t.name);
     const missingTables = requiredTables.filter(t => !existingTables.includes(t));
     

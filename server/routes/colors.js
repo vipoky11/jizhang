@@ -94,19 +94,6 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // 检查是否有备忘录使用此颜色
-    const [memos] = await db.query(
-      'SELECT COUNT(*) as count FROM memos WHERE color = (SELECT hex FROM colors WHERE id = ?)',
-      [id]
-    );
-    
-    if (memos[0].count > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `该颜色正在被 ${memos[0].count} 个备忘录使用，无法删除` 
-      });
-    }
 
     const [result] = await db.query('DELETE FROM colors WHERE id = ?', [id]);
 

@@ -29,10 +29,8 @@
     "clear-categories": "node server/database/clear-categories.js",
     "migrate-accounts": "node server/database/migrate-accounts.js",
     "set-default-account": "node server/database/set-default-account.js",
-    "migrate-memos": "node server/database/migrate-memos.js",
     "migrate-tags": "node server/database/migrate-tags.js",
     "migrate-colors": "node server/database/migrate-colors.js",
-    "migrate-memo-date": "node server/database/migrate-memo-date.js",
     "migrate-remove-color": "node server/database/migrate-remove-color.js",
     "migrate-suppliers": "node server/database/migrate-suppliers.js",
     "migrate-supplier-field": "node server/database/migrate-supplier-field.js"

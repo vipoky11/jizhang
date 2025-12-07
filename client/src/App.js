@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Layout, Button, Space, DatePicker, message, Card, Select, ConfigProvider, Popconfirm, Tooltip } from 'antd';
-import { PlusOutlined, AppstoreAddOutlined, AppstoreOutlined, WalletOutlined, BarChartOutlined, HomeOutlined, FileTextOutlined, ShopOutlined, LogoutOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, WalletOutlined, BarChartOutlined, HomeOutlined, ShopOutlined, LogoutOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import locale from 'antd/locale/zh_CN';
-import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
 import QuickEntryForm from './components/QuickEntryForm';
 import CategoryManager from './components/CategoryManager';
@@ -12,7 +11,7 @@ import AccountManager from './components/AccountManager';
 import SupplierManager from './components/SupplierManager';
 import LedgerStatisticsTable from './components/LedgerStatisticsTable';
 import FinancialAnalysis from './components/FinancialAnalysis';
-import MemoManager from './components/MemoManager';
+import TransactionForm from './components/TransactionForm';
 import Login from './components/Login';
 import { transactionAPI } from './api/transactions';
 import { categoryAPI } from './api/categories';
@@ -29,8 +28,6 @@ function App() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [formVisible, setFormVisible] = useState(false);
-  const [batchFormVisible, setBatchFormVisible] = useState(false);
   const [categoryManagerVisible, setCategoryManagerVisible] = useState(false);
   const [accountManagerVisible, setAccountManagerVisible] = useState(false);
   const [supplierManagerVisible, setSupplierManagerVisible] = useState(false);
@@ -48,7 +45,7 @@ function App() {
   const [filterSupplier, setFilterSupplier] = useState(null); // 筛选供应商，null表示全部
   const [categories, setCategories] = useState([]); // 所有分类列表
   const [suppliers, setSuppliers] = useState([]); // 所有供应商列表
-  const [currentPage, setCurrentPage] = useState('home'); // 'home', 'analysis', 'memos'
+  const [currentPage, setCurrentPage] = useState('home'); // 'home', 'analysis'
 
   // 加载交易记录
   const loadTransactions = useCallback(async () => {
@@ -216,54 +213,19 @@ function App() {
     return filtered;
   }, [transactions, filterYear, filterMonth, filterType, filterCategory, filterSupplier]);
 
-  // 处理新增/编辑提交
-  const handleSubmit = async (data) => {
+  // 处理编辑提交
+  const handleEditSubmit = async (data) => {
     try {
       if (editingRecord) {
         await transactionAPI.update(editingRecord.id, data);
         message.success('更新成功');
-      } else {
-        await transactionAPI.create(data);
-        message.success('添加成功');
+        setEditingRecord(null);
+        loadTransactions();
+        loadStats();
+        setLedgerRefreshKey(prev => prev + 1);
       }
-      setFormVisible(false);
-      setEditingRecord(null);
-      loadTransactions();
-      loadStats();
-      setLedgerRefreshKey(prev => prev + 1);
     } catch (error) {
-      message.error(editingRecord ? '更新失败' : '添加失败');
-      console.error(error);
-    }
-  };
-
-  // 处理批量提交
-  const handleBatchSubmit = async (batchData) => {
-    try {
-      const validData = batchData
-        .filter(item => item.amount > 0)
-        .map(item => ({
-          type: item.type,
-          amount: item.amount,
-          description: item.description || '',
-          date: item.date,
-          category: item.category || '',
-          account: item.account || '现金',
-        }));
-
-      if (validData.length === 0) {
-        message.warning('请至少添加一条有效记录');
-        return;
-      }
-
-      await transactionAPI.createBatch(validData);
-      message.success(`成功添加 ${validData.length} 条记录`);
-      setBatchFormVisible(false);
-      loadTransactions();
-      loadStats();
-      setLedgerRefreshKey(prev => prev + 1);
-    } catch (error) {
-      message.error('批量添加失败');
+      message.error('更新失败');
       console.error(error);
     }
   };
@@ -283,7 +245,6 @@ function App() {
   // 处理编辑
   const handleEdit = (record) => {
     setEditingRecord(record);
-    setFormVisible(true);
   };
 
   // 如果正在检查登录状态，显示加载中
@@ -354,13 +315,6 @@ function App() {
             >
               财务分析
             </Button>
-            <Button
-              type={currentPage === 'memos' ? 'primary' : 'default'}
-              icon={<FileTextOutlined />}
-              onClick={() => setCurrentPage('memos')}
-            >
-              备忘录
-            </Button>
           </Space>
         </div>
         
@@ -388,8 +342,6 @@ function App() {
       <Content style={{ padding: currentPage === 'analysis' ? '0' : '24px', background: '#f0f2f5' }}>
         {currentPage === 'analysis' ? (
           <FinancialAnalysis year={year} />
-        ) : currentPage === 'memos' ? (
-          <MemoManager year={year} />
         ) : (
           <>
             <LedgerStatisticsTable year={year} refreshKey={ledgerRefreshKey} />
@@ -482,22 +434,6 @@ function App() {
                 onClick={() => setSupplierManagerVisible(true)}
               >
                 供应商管理
-              </Button>
-              <Button
-                type="primary"
-                icon={<AppstoreAddOutlined />}
-                onClick={() => setBatchFormVisible(true)}
-              >
-                批量录入
-              </Button>
-              <Button
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setEditingRecord(null);
-                  setFormVisible(true);
-                }}
-              >
-                详细录入
               </Button>
             </Space>
           }
@@ -609,24 +545,12 @@ function App() {
         </Card>
 
         <TransactionForm
-          visible={formVisible}
+          visible={!!editingRecord}
           onCancel={() => {
-            setFormVisible(false);
             setEditingRecord(null);
           }}
-          onSubmit={handleSubmit}
+          onSubmit={handleEditSubmit}
           initialValues={editingRecord}
-          isBatch={false}
-          categoryRefreshKey={categoryRefreshKey}
-          accountRefreshKey={accountRefreshKey}
-          supplierRefreshKey={supplierRefreshKey}
-        />
-
-        <TransactionForm
-          visible={batchFormVisible}
-          onCancel={() => setBatchFormVisible(false)}
-          onSubmit={handleBatchSubmit}
-          isBatch={true}
           categoryRefreshKey={categoryRefreshKey}
           accountRefreshKey={accountRefreshKey}
           supplierRefreshKey={supplierRefreshKey}
