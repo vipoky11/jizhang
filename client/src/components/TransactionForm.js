@@ -16,7 +16,6 @@ const TransactionForm = ({ visible, onCancel, onSubmit, initialValues, categoryR
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [defaultAccount, setDefaultAccount] = useState('');
 
   // 加载账户列表
   useEffect(() => {
@@ -26,20 +25,6 @@ const TransactionForm = ({ visible, onCancel, onSubmit, initialValues, categoryR
           const response = await accountAPI.getAll();
           if (response.data.success) {
             setAccounts(response.data.data);
-            // 找到默认账户
-            const defaultAcc = response.data.data.find(acc => acc.is_default === 1);
-            if (defaultAcc) {
-              setDefaultAccount(defaultAcc.name);
-              // 如果是新增且没有设置账户，使用默认账户
-              if (!initialValues) {
-                form.setFieldsValue({ account: defaultAcc.name });
-              }
-            } else if (response.data.data.length > 0) {
-              setDefaultAccount(response.data.data[0].name);
-              if (!initialValues) {
-                form.setFieldsValue({ account: response.data.data[0].name });
-              }
-            }
           }
         } catch (error) {
           console.error('加载账户失败:', error);
@@ -84,24 +69,6 @@ const TransactionForm = ({ visible, onCancel, onSubmit, initialValues, categoryR
     }
   }, [visible, form, initialValues, categoryRefreshKey]);
 
-  // 监听类型变化，重新加载分类
-  const handleTypeChange = (value) => {
-    form.setFieldsValue({ type: value });
-    // 类型变化时，清空分类选择，让用户重新选择
-    form.setFieldsValue({ category: undefined });
-    const loadCategories = async () => {
-      try {
-        const response = await categoryAPI.getAll(value);
-        if (response.data.success) {
-          setCategories(response.data.data);
-          // 不再自动选择第一个分类，让用户手动选择
-        }
-      } catch (error) {
-        console.error('加载分类失败:', error);
-      }
-    };
-    loadCategories();
-  };
 
   // 当弹窗关闭时清空数据
   useEffect(() => {
